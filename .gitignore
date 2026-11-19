@@ -3,6 +3,7 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 Thumbs.db
-.env
 *.key
 .venv/
+config.bat
+node_modules

@@ -3,179 +3,155 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[Project Title]: Interactive Demo</title>
-<!--
-  STARTER TEMPLATE. The example simulation below is a Monte Carlo estimate of pi.
-  It is here only to show the required structure:
-    - at least three adjustable parameters
-    - Start / Pause / Reset
-    - a live visualisation
-    - at least one quantitative output, checked against a reference value
-    - an "About / How to use" panel
-  Replace the SIMULATION section and the controls with your own model.
--->
-<style>
-  :root { --ink:#1b2430; --muted:#5d6876; --line:#d8dee6; --accent:#1f6f8b; --bg:#f6f8fa; --ok:#1a7f37; --warn:#b35900; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
-  header { padding:16px 20px; background:#fff; border-bottom:1px solid var(--line); }
-  header h1 { margin:0; font-size:1.3rem; }
-  header p { margin:4px 0 0; color:var(--muted); font-size:.95rem; }
-  main { display:grid; grid-template-columns: 300px 1fr; gap:16px; padding:16px 20px; max-width:1200px; margin:0 auto; }
-  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
-  .panel { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px; }
-  label { display:block; font-size:.9rem; margin:12px 0 4px; }
-  label span { float:right; font-variant-numeric: tabular-nums; color:var(--muted); }
-  input[type=range] { width:100%; }
-  input[type=number] { width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; }
-  .buttons { display:flex; gap:8px; margin-top:16px; }
-  button { flex:1; padding:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; font-size:.95rem; cursor:pointer; }
-  button.secondary { background:#fff; color:var(--accent); }
-  canvas { width:100%; max-width:560px; aspect-ratio:1; display:block; margin:0 auto; background:#fff; border:1px solid var(--line); }
-  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-top:14px; }
-  .stat { border:1px solid var(--line); border-radius:6px; padding:10px; }
-  .stat .k { font-size:.8rem; color:var(--muted); }
-  .stat .v { font-size:1.2rem; font-variant-numeric: tabular-nums; }
-  .check.ok { color:var(--ok); } .check.warn { color:var(--warn); }
-  details { margin-top:16px; }
-  summary { cursor:pointer; font-weight:600; }
-  details p, details li { font-size:.92rem; line-height:1.45; }
-</style>
+<title>When should mosquito control start? Dengue in Colombo, 2017</title>
+<meta name="description" content="Interactive SIR model of Colombo's 2017 dengue epidemic, calibrated with MCMC: test when a mosquito-control campaign should start.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <h1>[Project Title]</h1>
-  <p>[One-sentence description of what the simulation shows.]</p>
-</header>
+<main class="page">
 
-<main>
-  <section class="panel" aria-label="Controls">
-    <!-- REPLACE: your own parameters (at least three) -->
-    <label for="nTotal">Total samples <span id="nTotalVal"></span></label>
-    <input id="nTotal" type="range" min="1000" max="200000" step="1000" value="50000">
+  <header class="intro">
+    <p class="project">Dengue in Colombo, 2017: an SIR model calibrated with MCMC</p>
+    <h1>When should mosquito control start?</h1>
+    <p class="lede">
+      If mosquito control had cut transmission by <b id="q-cut">20%</b>
+      <span id="q-length">for the rest of the season</span>, starting
+      <b id="q-start">4 weeks before the peak</b>, the 2017 peak would have been
+      <b id="q-reduction">37.0% lower</b> (95% credible interval <span id="q-ci">31.0–41.1%</span>)
+      and come <b id="q-timing">5 weeks earlier</b>.
+    </p>
+  </header>
 
-    <label for="speed">Samples per frame (speed) <span id="speedVal"></span></label>
-    <input id="speed" type="range" min="10" max="5000" step="10" value="200">
-
-    <label for="seed">Random seed</label>
-    <input id="seed" type="number" value="42" min="1" step="1">
-
-    <div class="buttons">
-      <button id="startBtn">Start</button>
-      <button id="resetBtn" class="secondary">Reset</button>
+  <section class="controls" aria-label="Scenario settings">
+    <div class="slider">
+      <label for="cut">Cut in transmission <output id="cut-value" for="cut">20%</output></label>
+      <input id="cut" type="range" min="0" max="50" step="5" value="20">
+      <p class="hint">How much less dengue the mosquitoes pass on while control runs.</p>
     </div>
+    <div class="slider">
+      <label for="weeks-before">Control starts <output id="weeks-before-value" for="weeks-before">4 weeks before the peak</output></label>
+      <input id="weeks-before" type="range" min="0" max="10" step="1" value="4">
+      <p class="hint">Counted back from the peak of each model run without control.</p>
+    </div>
+    <div class="slider">
+      <label for="length">Campaign length <output id="length-value" for="length">rest of the season</output></label>
+      <input id="length" type="range" min="1" max="21" step="1" value="21">
+      <p class="hint">Slide fully right to keep control on for the rest of the season.</p>
+    </div>
+    <div class="buttons">
+      <button id="start" type="button" class="primary">Start</button>
+      <button id="pause" type="button" disabled>Pause</button>
+      <button id="reset" type="button">Reset</button>
+      <label class="speed" for="speed">Speed
+        <select id="speed">
+          <option value="1">1 week per second</option>
+          <option value="3" selected>3 weeks per second</option>
+          <option value="6">6 weeks per second</option>
+        </select>
+      </label>
+    </div>
+  </section>
 
-    <details>
-      <summary>About / How to use</summary>
-      <!-- REPLACE: explain your model, its parameters and how to read the outputs -->
-      <p>This example estimates &pi; by sampling random points in a unit square and counting the fraction that falls inside the quarter circle: &pi; &asymp; 4 &times; (inside / total).</p>
-      <ul>
-        <li>Set the parameters, then press <b>Start</b>. <b>Pause</b> stops the run; <b>Reset</b> clears it and applies new settings.</li>
-        <li>The estimate is shown with a 95% confidence interval. The error should shrink roughly as 1/&radic;N.</li>
-        <li>The check compares the estimate with the reference value; the notebook gives the same result for the default settings.</li>
-      </ul>
+  <section class="chart-block" aria-label="Weekly cases chart">
+    <ul class="legend">
+      <li><span class="key line base"></span>No extra control</li>
+      <li><span class="key line ctrl"></span>With control</li>
+      <li><span class="key dot"></span>Reported cases, 2017</li>
+      <li><span class="key wash"></span>Control period</li>
+    </ul>
+    <p class="legend-note">Lines are the median of 200 model runs; the shaded bands hold 95% of them.</p>
+    <p id="readout" class="readout" aria-live="polite"></p>
+    <div class="chart-wrap">
+      <canvas id="chart" tabindex="0" role="img"
+        aria-label="Weekly dengue cases in Colombo, weeks 12 to 42 of 2017: reported cases, the model without extra control, and the model with the chosen control. Use the left and right arrow keys to read each week. The same numbers are in the table below the chart."></canvas>
+      <div id="tooltip" class="tooltip" hidden>
+        <p id="tt-week" class="tt-title"></p>
+        <p><span class="key dot"></span><b id="tt-reported"></b> reported</p>
+        <p><span class="key line base"></span><b id="tt-base"></b> no extra control <span class="tt-ci">(<span id="tt-base-ci"></span>)</span></p>
+        <p><span class="key line ctrl"></span><b id="tt-ctrl"></b> with control <span class="tt-ci">(<span id="tt-ctrl-ci"></span>)</span></p>
+      </div>
+    </div>
+    <details class="table-view">
+      <summary>Show the chart as a table</summary>
+      <table>
+        <thead><tr><th>Week</th><th>Starts</th><th>Reported</th><th>No extra control (median)</th><th>With control (median)</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
     </details>
   </section>
 
-  <section class="panel" aria-label="Simulation">
-    <canvas id="view" width="560" height="560" aria-label="Live visualisation"></canvas>
-    <div class="stats">
-      <div class="stat"><div class="k">Samples so far</div><div class="v" id="outN">0</div></div>
-      <div class="stat"><div class="k">Estimate &plusmn; 95% CI</div><div class="v" id="outEst">–</div></div>
-      <div class="stat"><div class="k">Reference value</div><div class="v" id="outRef">3.14159</div></div>
-      <div class="stat"><div class="k">Check</div><div class="v check" id="outCheck">–</div></div>
+  <section class="results" aria-label="Results">
+    <div class="figure">
+      <h2>Peak reduction</h2>
+      <p id="out-reduction" class="value">37.0%</p>
+      <p id="out-reduction-ci" class="note"></p>
+    </div>
+    <div class="figure">
+      <h2>Peak timing</h2>
+      <p id="out-timing" class="value">5 weeks earlier</p>
+      <p id="out-timing-note" class="note"></p>
+    </div>
+    <div class="figure">
+      <h2>Cases averted, weeks 12–42</h2>
+      <p id="out-averted" class="value">26.7%</p>
+      <p id="out-averted-ci" class="note"></p>
+    </div>
+    <div class="figure">
+      <h2>Critical cut, 1 − 1/R₀</h2>
+      <p id="out-critical" class="value">8.8%</p>
+      <p id="out-critical-note" class="note"></p>
     </div>
   </section>
+
+  <div class="columns">
+    <section id="check" class="check" data-state="off" aria-labelledby="check-title">
+      <h2 id="check-title">Check against the notebook</h2>
+      <p class="status" id="check-status"></p>
+      <p id="check-detail"></p>
+      <dl>
+        <dt>Reference scenario</dt><dd>20% cut, starting 4 weeks before the peak, for the rest of the season</dd>
+        <dt>Notebook, section 5.5</dt><dd>Peak reduction <span id="ref-reduction"></span>; cases averted <span id="ref-averted"></span></dd>
+        <dt>Tolerance</dt><dd id="tolerance"></dd>
+        <dt>Draw fingerprint</dt><dd><span id="fp-demo" class="mono"></span><br><span class="small">Mean β, δ, τ, I₀ and b of the 200 draws. Section 5.5 of the notebook prints the same five numbers, so both use the same draws.</span></dd>
+      </dl>
+      <p class="small">The main notebook result, from 2,000 draws in section 5.2, is a 36.7% peak reduction (32.3 to 42.3). This page uses 200 of the draws so that it runs instantly in a browser.</p>
+    </section>
+
+    <section class="how" aria-labelledby="how-title">
+      <h2 id="how-title">How to use</h2>
+      <ol>
+        <li>Set how strong the control is, how early it starts and how long it lasts. The results update at once.</li>
+        <li>Press <b>Start</b> to watch weeks 12 to 42 of 2017 unfold, <b>Pause</b> to stop, and <b>Reset</b> to go back to the reference scenario.</li>
+        <li>Hover over the chart, or select it and use the arrow keys, to read any week.</li>
+      </ol>
+      <h3>Try this</h3>
+      <p>Set a 10% cut starting 8 weeks before the peak, and note the peak reduction. Then set a 40% cut starting in the peak week. The weak, early campaign lowers the peak far more than the strong, late one.</p>
+      <h3>Reading the results</h3>
+      <p><b>Peak reduction</b> is how much lower the worst week would be. <b>Peak timing</b> is how many weeks earlier or later it comes. <b>Cases averted</b> is the share of reported cases in weeks 12 to 42 that would not have happened. Each is the median of 200 model runs, with a 95% credible interval. When the cut is larger than the <b>critical cut</b>, cases stop growing as soon as control begins.</p>
+    </section>
+  </div>
+
+  <section class="about" aria-labelledby="about-title">
+    <h2 id="about-title">About the model</h2>
+    <p>The model splits Colombo's 2.48 million people into susceptible, infected and recovered groups (an SIR model). People recover after about 6.5 days. The transmission rate drops smoothly in early August, when the 2017 epidemic collapsed. The equations are solved with a fourth-order Runge–Kutta method, 10 steps per week.</p>
+    <p>The transmission rate, the size and timing of the August drop, the starting number of infections and the background cases were fitted to the reported weekly cases with a Metropolis MCMC sampler. This page runs the model on 200 of the resulting parameter sets, so every result carries its uncertainty.</p>
+    <p>Mosquito control multiplies the transmission rate by one minus the cut while it runs, switched on and off over half a week. The start week is set separately for each parameter set, from that run's own peak without control.</p>
+    <h3>Limitations</h3>
+    <ul>
+      <li>Starting "4 weeks before the peak" uses hindsight. In a real season the peak week is not known in advance.</li>
+      <li>The cut is an idealised, constant reduction. Real campaigns vary in strength.</li>
+      <li>Mosquitoes are not modelled directly, and the model covers one district and one season.</li>
+      <li>The early-August drop is assumed to happen in every scenario.</li>
+    </ul>
+  </section>
+
+  <footer class="footer">
+    <p>Code, data and the full analysis are in the <a href="https://github.com/geethsenaviratne/dengue-sir-mcmc-colombo">GitHub repository</a>. The notebook runs in <a href="https://colab.research.google.com/github/geethsenaviratne/dengue-sir-mcmc-colombo/blob/main/notebook/dengue-sir-mcmc-colombo.ipynb">Google Colab</a>.</p>
+    <p>Data: weekly dengue notifications, Epidemiology Unit, Ministry of Health, Sri Lanka, compiled in the denguedatahub R package (GPL-3). Released under the MIT licence.</p>
+  </footer>
+
 </main>
-
-<script>
-// ---------- seeded random number generator (reproducible runs) ----------
-function mulberry32(a) {
-  return function () {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-
-// ---------- SIMULATION (REPLACE with your own model) ----------
-const REFERENCE = Math.PI;          // analytic / notebook reference value
-const sim = { rng: null, n: 0, inside: 0, nTotal: 0 };
-
-function initSim(params) {
-  sim.rng = mulberry32(params.seed);
-  sim.n = 0; sim.inside = 0; sim.nTotal = params.nTotal;
-}
-
-function stepSim(k, draw) {                 // advance the model by k samples
-  for (let i = 0; i < k && sim.n < sim.nTotal; i++) {
-    const x = sim.rng(), y = sim.rng();
-    const hit = x * x + y * y <= 1;
-    sim.n++; if (hit) sim.inside++;
-    draw(x, y, hit);
-  }
-}
-
-function estimate() {                       // quantitative output with uncertainty
-  if (sim.n === 0) return null;
-  const p = sim.inside / sim.n;
-  const est = 4 * p;
-  const se = 4 * Math.sqrt(p * (1 - p) / sim.n);
-  return { est, ci: 1.96 * se };
-}
-
-// ---------- UI wiring (keep the pattern, adapt the details) ----------
-const $ = (id) => document.getElementById(id);
-const ctx = $("view").getContext("2d");
-let running = false, frame = null;
-
-function params() {
-  return { nTotal: +$("nTotal").value, speed: +$("speed").value, seed: Math.max(1, Math.floor(+$("seed").value) || 1) };
-}
-function showParams() {
-  $("nTotalVal").textContent = (+$("nTotal").value).toLocaleString();
-  $("speedVal").textContent = (+$("speed").value).toLocaleString();
-}
-function clearView() {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = "#1b2430"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, w, w, -Math.PI / 2, 0); ctx.stroke();
-}
-function drawPoint(x, y, hit) {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = hit ? "rgba(31,111,139,0.55)" : "rgba(179,89,0,0.55)";
-  ctx.fillRect(x * w, (1 - y) * w, 1.5, 1.5);
-}
-function showOutputs() {
-  $("outN").textContent = sim.n.toLocaleString();
-  const e = estimate();
-  if (!e) { $("outEst").textContent = "–"; $("outCheck").textContent = "–"; $("outCheck").className = "v check"; return; }
-  $("outEst").textContent = `${e.est.toFixed(4)} ± ${e.ci.toFixed(4)}`;
-  const ok = Math.abs(e.est - REFERENCE) <= e.ci;
-  $("outCheck").textContent = ok ? "Within CI" : "Outside CI";
-  $("outCheck").className = "v check " + (ok ? "ok" : "warn");
-}
-function loop() {
-  stepSim(params().speed, drawPoint);
-  showOutputs();
-  if (sim.n >= sim.nTotal) { stop(); $("startBtn").textContent = "Done"; $("startBtn").disabled = true; return; }
-  frame = requestAnimationFrame(loop);
-}
-function start() { running = true; $("startBtn").textContent = "Pause"; frame = requestAnimationFrame(loop); }
-function stop() { running = false; if (frame) cancelAnimationFrame(frame); $("startBtn").textContent = "Start"; }
-function reset() {
-  stop(); initSim(params()); clearView(); showOutputs();
-  $("startBtn").disabled = false; $("startBtn").textContent = "Start";
-}
-
-$("startBtn").addEventListener("click", () => (running ? stop() : start()));
-$("resetBtn").addEventListener("click", reset);
-["nTotal", "speed"].forEach((id) => $(id).addEventListener("input", showParams));
-["nTotal", "seed"].forEach((id) => $(id).addEventListener("change", reset));
-$("outRef").textContent = REFERENCE.toFixed(5);
-showParams(); reset();
-</script>
+<script src="script.js"></script>
 </body>
 </html>

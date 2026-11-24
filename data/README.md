@@ -55,4 +55,4 @@ Week 15 (8 to 14 April, 332 cases) dips between 664 and 823. That week includes 
 
 ## Other inputs
 
-The Colombo district population was 2,324,349 in the 2012 census and 2,374,461 in the 2024 census (provisional), from the Department of Census and Statistics ([statistics.gov.lk](https://www.statistics.gov.lk)).
+The model uses N = 2,480,000, the official mid-year population estimate for Colombo district in 2017 from the Department of Census and Statistics ([mid-year population by district and sex, 2014–2024](https://www.statistics.gov.lk/Resource/en/Population/Vital_Statistics/Mid-year_population_by_district_and_sex_2014_2024.pdf)). For comparison, the census counted 2,324,349 people in 2012 and 2,374,461 in 2024 (provisional). Using a value interpolated between the two censuses instead changes the results by less than 0.5%.

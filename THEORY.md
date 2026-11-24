@@ -27,38 +27,38 @@ To answer it, a model is first fitted to what actually happened in weeks 12–42
 
 Time *t* is in weeks of 2017. The population is split into susceptible *S*, infectious *I* and recovered *R* people, and *C* counts all infections since week 12 [8]:
 
-$$
+```math
 \frac{dS}{dt} = -\beta(t)\frac{SI}{N}, \qquad
 \frac{dI}{dt} = \beta(t)\frac{SI}{N} - \gamma I, \qquad
 \frac{dR}{dt} = \gamma I, \qquad
 \frac{dC}{dt} = \beta(t)\frac{SI}{N} \qquad (1)
-$$
+```
 
 Adding the first three equations gives d(S + I + R)/dt = 0, so the population is conserved. Transmission drops once during the season through a smooth logistic switch σ(x) = 1/(1 + e⁻ˣ):
 
-$$
+```math
 \beta(t) = \beta\left[1 - \delta\,\sigma\left(\frac{t-\tau}{w}\right)\right] \qquad (2)
-$$
+```
 
 A sudden step would break RK4's fourth-order accuracy and make the likelihood jump whenever τ crossed a time step. With w = 0.5 week the switch is smooth, yet completes most of the change within about two weeks.
 
 **Reproduction number and the critical cut.** Reported cases were only about 1.3% of the population, so S stays close to N and Eq. (1) gives dI/dt ≈ (β(t) − γ)I. Cases grow only when R(t) = β(t)/γ > 1. Before the drop R₀ = β/γ, and afterwards R₀(1 − δ). Mosquito control multiplies β(t) by a factor that switches on at week *a* and off at week *a* + *d*:
 
-$$
+```math
 \beta_c(t) = \beta(t)\left[1 - c\left(\sigma\left(\frac{t-a}{w}\right) - \sigma\left(\frac{t-a-d}{w}\right)\right)\right] \qquad (3)
-$$
+```
 
 A sustained cut stops the growth when R₀(1 − c) < 1, which gives the critical cut:
 
-$$
+```math
 c^{*} = 1 - \frac{1}{R_0} \qquad (4)
-$$
+```
 
 **Observation model.** The expected reported cases in week *j* are the new infections in that week plus the background:
 
-$$
+```math
 \mu_j = C(t_{j+1}) - C(t_j) + b \qquad (5)
-$$
+```
 
 | Symbol | Meaning | Units | Value / range | Source |
 |---|---|---|---|---|
@@ -84,13 +84,13 @@ The fitted values (posterior medians with 95% credible intervals) are β = 1.181
 
 With β changing over time, Eq. (1) has no closed-form solution, so it is solved with the classical RK4 method [17]. For y = (S, I, R, C) and dy/dt = f(t, y), one step of size *h* is:
 
-$$
+```math
 \begin{aligned}
 k_1 &= f(t_n, y_n), & k_2 &= f\left(t_n + \tfrac{h}{2},\ y_n + \tfrac{h}{2}k_1\right),\\
 k_3 &= f\left(t_n + \tfrac{h}{2},\ y_n + \tfrac{h}{2}k_2\right), & k_4 &= f(t_n + h,\ y_n + h k_3),\\
 y_{n+1} &= y_n + \tfrac{h}{6}\left(k_1 + 2k_2 + 2k_3 + k_4\right)
 \end{aligned} \qquad (6)
-$$
+```
 
 - **Accuracy.** The error of one step is O(h⁵) and the global error O(h⁴), so halving *h* cuts the error about 16 times. The notebook measures a slope of 4.03 (cell 16).
 - **Stability.** RK4 is stable when hλ lies inside its stability region, which reaches about −2.79 on the negative real axis [17]. The fastest rate here is recovery, γ ≈ 1.08 per week, so even h = 0.25 gives hγ ≈ 0.27. Accuracy, not stability, sets the step size.
@@ -101,10 +101,10 @@ $$
 
 Weekly counts vary far more than a Poisson model allows, so the observed cases yⱼ are modelled as negative binomial with mean μⱼ and dispersion *k*:
 
-$$
+```math
 P(y_j \mid \mu_j, k) = \frac{\Gamma(y_j + k)}{\Gamma(k)\, y_j!}\left(\frac{k}{k+\mu_j}\right)^{k}\left(\frac{\mu_j}{k+\mu_j}\right)^{y_j}, \qquad
-\operatorname{Var}(y_j) = \mu_j + \frac{\mu_j^{2}}{k} \qquad (7)
-$$
+\mathrm{Var}(y_j) = \mu_j + \frac{\mu_j^{2}}{k} \qquad (7)
+```
 
 With k ≈ 45 the standard deviation at the peak is about 290 cases, against 44 for a Poisson model. The six parameters θ = (β, δ, τ, I₀, b, k) have the uniform priors in the table above, and the posterior is p(θ | y) ∝ p(θ) ∏ⱼ P(yⱼ | μⱼ(θ), k) over weeks 12–42 [18]. The likelihood is computed in log form with SciPy's log-gamma function, so factorials of counts near 2,000 do not overflow.
 
@@ -112,17 +112,17 @@ With k ≈ 45 the standard deviation at the peak is about 290 cases, against 44 
 
 From the current point θ, a proposal θ′ = θ + ε with ε ~ N(0, Σ) is accepted with probability [14]:
 
-$$
+```math
 \alpha(\theta \to \theta') = \min\left(1,\ \frac{p(\theta' \mid y)}{p(\theta \mid y)}\right) \qquad (8)
-$$
+```
 
 The symmetric proposal gives detailed balance, so the posterior is the stationary distribution of this Markov chain. A pilot run of 800 iterations estimates the posterior covariance, and the main run uses Σ = (2.38²/d) Σ_pilot with d = 6, the near-optimal scaling of Roberts *et al.* [16]. The measured acceptance rate, 26%, is close to the 23% this theory targets. 32 chains run 1,500 iterations each; after 500 burn-in iterations, 32,000 samples remain.
 
 Convergence is checked with the Gelman–Rubin statistic, which compares the between-chain variance *B* with the within-chain variance *W* for chains of length *n* [15]:
 
-$$
+```math
 \hat{R} = \sqrt{\frac{\frac{n-1}{n}W + \frac{1}{n}B}{W}} \qquad (9)
-$$
+```
 
 The largest R̂ is 1.018, below the usual threshold of 1.1.
 
@@ -130,9 +130,9 @@ The largest R̂ is 1.018, below the usual threshold of 1.1.
 
 Every reported number is a Monte Carlo estimate from posterior samples θ⁽¹⁾, …, θ⁽ᴹ⁾:
 
-$$
+```math
 \mathbb{E}\left[g(\theta) \mid y\right] \approx \frac{1}{M}\sum_{m=1}^{M} g\left(\theta^{(m)}\right) \qquad (10)
-$$
+```
 
 By the law of large numbers this converges to the posterior expectation as M grows. Medians and 95% credible intervals are sample percentiles. Each control scenario is run for 2,000 posterior draws, so the calibration uncertainty flows into every answer.
 

@@ -2,7 +2,9 @@
 
 An SIR epidemic model, fitted to Colombo's 2017 dengue epidemic with a Metropolis MCMC sampler, that estimates how much lower and earlier the epidemic peak would have been if mosquito control had cut transmission earlier.
 
-**[Live demo](https://geethsenaviratne.github.io/dengue-sir-mcmc-colombo/)** · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/geethsenaviratne/dengue-sir-mcmc-colombo/blob/main/notebook/dengue-sir-mcmc-colombo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/geethsenaviratne/dengue-sir-mcmc-colombo/blob/main/notebook/dengue-sir-mcmc-colombo.ipynb)
+
+**[Live Demo](https://geethsenaviratne.github.io/dengue-sir-mcmc-colombo/)**
 
 ![Screenshot of the web demo](figures/demo-screenshot.png)
 

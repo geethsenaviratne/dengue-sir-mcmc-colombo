@@ -466,9 +466,25 @@ if (typeof document !== "undefined") {
   });
   [ui.cut, ui.weeksBefore, ui.length].forEach((el) => el.addEventListener("input", () => { lastReadoutWeek = null; updateResults(); }));
 
-  /* --- redraw when the size or the colour scheme changes --- */
+  /* --- light / dark theme: the button at the top right switches it, and the choice is remembered --- */
+  const themeButton = $("theme-toggle");
+  function showTheme() {
+    const dark = document.documentElement.dataset.theme === "dark";
+    themeButton.setAttribute("aria-pressed", String(dark));
+    themeButton.setAttribute("aria-label", dark ? "Dark theme on. Switch to light theme" : "Light theme on. Switch to dark theme");
+    themeButton.querySelector(".theme-label").textContent = dark ? "Dark" : "Light";
+  }
+  themeButton.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (e) { /* storage blocked: the choice lasts until the page closes */ }
+    showTheme();
+    draw();
+  });
+  showTheme();
+
+  /* --- redraw when the size changes --- */
   new ResizeObserver(() => draw()).observe(ui.canvas);
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => draw());
 
   setText("ref-reduction", `${fmt1(REFERENCE.reduction)}% (${fmt1(REFERENCE.reductionCI[0])} to ${fmt1(REFERENCE.reductionCI[1])})`);
   setText("ref-averted", `${fmt1(REFERENCE.averted)}% (${fmt1(REFERENCE.avertedCI[0])} to ${fmt1(REFERENCE.avertedCI[1])})`);

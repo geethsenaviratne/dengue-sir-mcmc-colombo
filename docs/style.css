@@ -1,4 +1,5 @@
-/* Colours: chart series follow a colour-blind-checked pair (blue = no extra control, orange = with control). */
+/* Colours: chart series follow a colour-blind-checked pair (blue = no extra control, orange = with control).
+   Light is the default; the button at the top right switches to the dark palette below. */
 :root {
   color-scheme: light;
   --page: #f2f4f3;
@@ -19,27 +20,25 @@
   --fail: #c0392f;
   --focus: #2a78d6;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --page: #0f1416;
-    --surface: #161c1f;
-    --ink: #edf0ee;
-    --text-secondary: #bac3c5;
-    --text-muted: #8c9698;
-    --grid: #252d30;
-    --axis: #3a4447;
-    --hairline: #2c3538;
-    --base: #3987e5;
-    --ctrl: #d95926;
-    --base-wash: rgba(57, 135, 229, 0.18);
-    --ctrl-wash: rgba(217, 89, 38, 0.2);
-    --reported: #7f888b;
-    --control-wash: rgba(237, 240, 238, 0.06);
-    --pass: #3cb43c;
-    --fail: #e66767;
-    --focus: #6da7ec;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f1416;
+  --surface: #161c1f;
+  --ink: #edf0ee;
+  --text-secondary: #bac3c5;
+  --text-muted: #8c9698;
+  --grid: #252d30;
+  --axis: #3a4447;
+  --hairline: #2c3538;
+  --base: #3987e5;
+  --ctrl: #d95926;
+  --base-wash: rgba(57, 135, 229, 0.18);
+  --ctrl-wash: rgba(217, 89, 38, 0.2);
+  --reported: #7f888b;
+  --control-wash: rgba(237, 240, 238, 0.06);
+  --pass: #3cb43c;
+  --fail: #e66767;
+  --focus: #6da7ec;
 }
 
 * { box-sizing: border-box; }
@@ -49,11 +48,23 @@ body {
   color: var(--ink);
   font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-.page { max-width: 1080px; margin: 0 auto; padding: 40px 24px 56px; }
+.page { position: relative; max-width: 1080px; margin: 0 auto; padding: 40px 24px 56px; }
 h1, h2, h3 { line-height: 1.2; margin: 0; }
 p { margin: 0; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+
+/* Light / dark switch, top right */
+.theme-toggle {
+  position: absolute; top: 8px; right: 24px;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 12px; font-size: 0.85rem; color: var(--text-secondary);
+}
+.theme-toggle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.theme-toggle .moon { display: none; }
+:root[data-theme="dark"] .theme-toggle .sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .moon { display: inline; }
+.theme-toggle:hover { color: var(--ink); border-color: var(--text-muted); }
 
 /* Introduction: the research question, answered live */
 .intro { max-width: 52rem; }
